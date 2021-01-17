@@ -1,29 +1,61 @@
+import requests
 import numpy as np
 import matplotlib.pyplot as plt
 
+JSON_ITA_URL = "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-andamento-nazionale.json"
+
+class Data:
+	def __init__(self):
+		json = requests.get(JSON_ITA_URL).json()
+		def buildArray(key):
+			return [0 if e[key] is None else int(e[key]) for e in json]
+
+		self.data = [e["data"] for e in json]
+		self.ricoverati_con_sintomi = buildArray("ricoverati_con_sintomi")
+		self.terapia_intensiva = buildArray("terapia_intensiva")
+		self.totale_ospedalizzati = buildArray("totale_ospedalizzati")
+		self.ingressi_terapia_intensiva = buildArray("ingressi_terapia_intensiva")
+
+		self.isolamento_domiciliare = buildArray("isolamento_domiciliare")
+		self.deceduti = buildArray("deceduti")
+		self.dimessi_guariti = buildArray("dimessi_guariti")
+
+		self.nuovi_positivi = buildArray("nuovi_positivi")
+		self.variazione_totale_positivi = buildArray("variazione_totale_positivi")
+		self.totale_positivi = buildArray("totale_positivi")
+		self.totale_casi = buildArray("totale_casi")
+
+		self.tamponi = buildArray("tamponi")
+		self.casi_testati = buildArray("casi_testati")
+
+
 def incremento(arr):
-	inc = []
+	inc = [0]
 	for i in range(len(arr)-1):
-		inc.append(arr[i] - arr[i+1])
-	inc = inc + [inc[-1] - (inc[-2] - inc[-1])]
-	print("Inc[" + str(len(inc)) + "]", *inc)
+		inc.append(arr[i+1] - arr[i])
 	return inc
 
 def mediaMobile(arr):
-	mm = []
+	mm = [0, 0, 0]
 	for i in range(len(arr)-7+1):
 		mm.append(int(np.average(arr[i:i+7])))
-	print(len(mm))
 	return mm
 
-a = [16146, 17246, 15774, 14242, 12532, 18627, 19978, 17533, 18020, 20331, 15378, 10800, 14245, 11831, 22211, 23477, 16202, 11224, 8585, 8913, 10431, 19037, 18040, 14522, 13318, 10872, 15104, 16308, 17992, 18236, 17572, 14844, 12030, 17938, 19903, 18727, 16999, 12756, 14842, 13720, 18887, 21052, 24099, 23225, 20709, 19350, 16377, 20648, 26323, 28352, 29003, 25853, 23232, 22930, 28337, 34767, 37242, 36176, 34282, 32191, 27354, 33979, 37255, 40902, 37978, 32961, 35098, 25271, 32616, 39811, 37809, 34505, 30550, 28244, 22253, 29907, 31758, 31084, 26831, 24991, 21994, 17012, 21273, 19644, 19143, 16079, 15199, 10874, 9338, 11705, 10925, 10010, 8804, 7332, 5901, 4619, 5456, 5724, 5372, 4458, 3678, 2677, 2257, 2578, 2844, 2499, 2548, 1851, 1648, 1494, 1766, 1869, 1912, 1786, 1640, 1392, 1350, 1587, 1638, 1907, 1585, 1452, 1229, 1008, 1458, 1501, 1616, 1597, 1434, 1370, 1108, 1297, 1694, 1733, 1397, 1326, 978, 996, 1365, 1444, 1462, 1411, 1367, 878, 953, 1210, 1071, 947, 845, 642, 403, 320, 479, 629, 574, 523, 481, 412, 259, 463, 347, 552, 402, 384, 190, 159, 239, 295, 379, 386, 289, 212, 170, 255, 275, 252, 306, 282, 129, 190, 219, 249, 233, 230, 163, 114, 169, 234, 188, 276, 229, 193, 138, 208, 192, 235, 223, 201, 187, 142, 126, 174, 175, 259, 296, 190, 122, 218, 224, 262, 251, 333, 329, 210, 303, 338, 346, 163, 379, 202, 283, 280, 197, 270, 518, 177, 321, 318, 178, 355, 416, 516, 593, 584, 397, 300, 531, 669, 652, 642, 665, 813, 451, 675, 875, 789, 992, 888, 1402, 744, 802, 1083, 1327, 1401, 1444, 1075, 1221, 1389, 1900, 1965, 1872, 2086, 2091, 1739, 2324, 2357, 3021, 2646, 3370, 2729, 2256, 3047, 3491, 3493, 3786, 2667, 2972, 3153, 4092, 4694, 3951, 4204, 3836, 3039, 3599, 4316, 4805, 4585, 4668, 4782, 4053, 4050, 5217, 5974, 5959, 6153, 5210, 5249, 4789, 5560, 6557, 5986, 5322, 4207, 3526, 3233, 3590, 3497, 2547, 2651, 2313, 977, 1797, 1492, 1247, 778, 769, 587, 466, 342, 566, 240, 238, 250, 78, 93, 221]
-print(len(a))
-mm = mediaMobile(a)
-inc = incremento(a)
-plt.plot(a[::-1][3:-3], color="#ff000066")
-plt.plot(mm[::-1], color="#ff0000ff")
-plt.plot(inc[::-1][3:-3], color="#0000ff66")
-mminc = mediaMobile(inc)
-plt.plot(mminc[::-1], color="#0000ffff")
-plt.plot([0 for i in range(len(mm[::-1]))], color="#00ff0066") # y=0 line
+
+def plotConMediaMobile(arr, colore):
+	mm = mediaMobile(arr)
+	plt.plot(arr, color=colore+"66")
+	plt.plot(mm, color=colore+"ff")
+
+def plotLineaZero(arr, colore):
+	plt.plot([0 for i in range(len(arr))], color=colore+"66")
+
+
+data = Data()
+a = data.nuovi_positivi
+
+plotConMediaMobile(a, "#ff0000")
+plotConMediaMobile(incremento(a), "#0000ff")
+#plotConMediaMobile(incremento(incremento(a)), "#00ff00")
+plotLineaZero(a, "#000000")
 plt.show()
