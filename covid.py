@@ -36,26 +36,33 @@ def incremento(arr):
 	return inc
 
 def mediaMobile(arr):
-	mm = [0, 0, 0]
-	for i in range(len(arr)-7+1):
-		mm.append(int(np.average(arr[i:i+7])))
+	rangeSize = 7
+	mm = [0] * (rangeSize // 2)
+	for i in range(len(arr)-rangeSize+1):
+		mm.append(np.average(arr[i:i+rangeSize]))
 	return mm
 
 
 def plotConMediaMobile(arr, colore):
 	mm = mediaMobile(arr)
-	plt.plot(arr, color=colore+"66")
-	plt.plot(mm, color=colore+"ff")
+	plt.plot(arr, linewidth=0.5, color=colore+"77")
+	plt.plot(mm, linewidth=1.2, color=colore+"ff")
 
-def plotLineaZero(arr, colore):
-	plt.plot([0 for i in range(len(arr))], color=colore+"66")
+def plotLineaZero(colore):
+	plt.plot([0 for i in range(len(data.nuovi_positivi))], linewidth=0.5, color=colore+"77")
+
+def plotPercentualePositivi(colore):
+	incrementoTamponi = incremento(data.tamponi)
+	incrementoTamponi[0] = incrementoTamponi[1]
+	incrementoTamponi[297] = (incrementoTamponi[296] + incrementoTamponi[298]) / 2
+	plotConMediaMobile(np.multiply(np.divide(data.nuovi_positivi, incrementoTamponi), 50000), colore)
 
 
 data = Data()
-a = data.nuovi_positivi
-
-plotConMediaMobile(a, "#ff0000")
-plotConMediaMobile(incremento(a), "#0000ff")
-#plotConMediaMobile(incremento(incremento(a)), "#00ff00")
-plotLineaZero(a, "#000000")
+plotConMediaMobile(data.nuovi_positivi, "#ff0000")
+plotConMediaMobile(incremento(data.nuovi_positivi), "#bb0000")
+plotPercentualePositivi("#00ff00")
+plotConMediaMobile(data.totale_ospedalizzati, "#0000ff")
+plotConMediaMobile(incremento(data.totale_ospedalizzati), "#0000bb")
+plotLineaZero("#000000")
 plt.show()
