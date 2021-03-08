@@ -1,8 +1,14 @@
 import requests
 import numpy as np
 import matplotlib.pyplot as plt
+import time
+import datetime
 
 JSON_ITA_URL = "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-andamento-nazionale.json"
+JSON_VACCINI_ITA_URL = "https://raw.githubusercontent.com/italia/covid19-opendata-vaccini/master/dati/somministrazioni-vaccini-summary-latest.json"
+
+def dateStringToObject(dateString):
+	return datetime.date(int(dateString[:4]), int(dateString[5:7]), int(dateString[8:10]))
 
 class Data:
 	def __init__(self):
@@ -10,7 +16,7 @@ class Data:
 		def buildArray(key):
 			return [0 if e[key] is None else int(e[key]) for e in json]
 
-		self.data = [e["data"] for e in json]
+		self.data = [dateStringToObject(e["data"]) for e in json]
 		self.ricoverati_con_sintomi = buildArray("ricoverati_con_sintomi")
 		self.terapia_intensiva = buildArray("terapia_intensiva")
 		self.totale_ospedalizzati = buildArray("totale_ospedalizzati")
@@ -27,6 +33,13 @@ class Data:
 
 		self.tamponi = buildArray("tamponi")
 		self.casi_testati = buildArray("casi_testati")
+
+		jsonVaccini = requests.get(JSON_VACCINI_ITA_URL).json()["data"]
+		self.nuovi_vaccini = [0 for _ in range(len(json))]
+		for dataPoint in jsonVaccini:
+			dateSomministrazione = dateStringToObject(dataPoint["data_somministrazione"])
+			self.nuovi_vaccini[(dateSomministrazione - self.data[0]).days] += dataPoint["totale"]
+		self.nuovi_vaccini = np.trim_zeros(self.nuovi_vaccini, 'b') # remove zeros at end
 
 
 def incremento(arr):
