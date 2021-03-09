@@ -81,8 +81,4 @@ plotConMediaMobile(data.nuovi_vaccini, "#00ff00")
 plotLineaZero("#000000")
 
 plt.xticks(rotation=90)
-plt.show(block=False)
-while True:
-	plt.tight_layout()
-	plt.gcf().canvas.flush_events()
-	time.sleep(0.01)
+plt.show()
