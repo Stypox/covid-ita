@@ -58,11 +58,11 @@ def mediaMobile(arr):
 
 def plotConMediaMobile(arr, colore):
 	mm = mediaMobile(arr)
-	plt.plot(arr, linewidth=0.5, color=colore+"77")
-	plt.plot(mm, linewidth=1.2, color=colore+"ff")
+	plt.plot_date(data.data[0:len(arr)], arr, linewidth=0.5, color=colore+"77", fmt="b-")
+	plt.plot_date(data.data[0:len(mm)], mm, linewidth=1.2, color=colore+"ff", fmt="b-")
 
 def plotLineaZero(colore):
-	plt.plot([0 for i in range(len(data.nuovi_positivi))], linewidth=0.5, color=colore+"77")
+	plt.plot_date(data.data[0:len(data.nuovi_positivi)], [0 for i in range(len(data.nuovi_positivi))], linewidth=0.5, color=colore+"77", fmt="b-")
 
 def plotPercentualePositivi(colore):
 	incrementoTamponi = incremento(data.tamponi)
@@ -74,8 +74,15 @@ def plotPercentualePositivi(colore):
 data = Data()
 plotConMediaMobile(data.nuovi_positivi, "#ff0000")
 plotConMediaMobile(incremento(data.nuovi_positivi), "#bb0000")
-plotPercentualePositivi("#00ff00")
+plotPercentualePositivi("#aaaa00")
 plotConMediaMobile(data.totale_ospedalizzati, "#0000ff")
 plotConMediaMobile(incremento(data.totale_ospedalizzati), "#0000bb")
+plotConMediaMobile(data.nuovi_vaccini, "#00ff00")
 plotLineaZero("#000000")
-plt.show()
+
+plt.xticks(rotation=90)
+plt.show(block=False)
+while True:
+	plt.tight_layout()
+	plt.gcf().canvas.flush_events()
+	time.sleep(0.01)
