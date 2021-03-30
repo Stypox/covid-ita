@@ -140,6 +140,10 @@ def plotConMediaMobile(arr, colore):
 	plt.plot_date(d.date[0:len(arr)], arr, linewidth=0.5, color=colore+"77", fmt="b-")
 	plt.plot_date(d.date[0:len(mm)], mm, linewidth=1.2, color=colore+"ff", fmt="b-")
 
+def plotConMediaMobileEIncremento(arr, colore):
+	plotConMediaMobile(arr, colore)
+	plotConMediaMobile(incremento(arr), colore.replace("ff", "bb"))
+
 def plotLineaZero(colore):
 	plt.plot_date(d.date[0:d.numero_giorni], [0 for i in range(d.numero_giorni)], linewidth=0.5, color=colore+"77", fmt="b-")
 
@@ -150,12 +154,10 @@ def plotPercentualePositivi(regione, colore):
 	plotConMediaMobile(np.multiply(np.divide(regione.nuovi_positivi, incrementoTamponi), 50000), colore)
 
 def plot(regione):
-	plotConMediaMobile(regione.nuovi_positivi, "#ff0000")
-	plotConMediaMobile(incremento(regione.nuovi_positivi), "#bb0000")
+	plotConMediaMobileEIncremento(regione.nuovi_positivi, "#ff0000")
+	plotConMediaMobileEIncremento(regione.totale_ospedalizzati, "#0000ff")
+	plotConMediaMobileEIncremento(regione.nuovi_vaccini, "#00ff00")
 	plotPercentualePositivi(regione, "#aaaa00")
-	plotConMediaMobile(regione.totale_ospedalizzati, "#0000ff")
-	plotConMediaMobile(incremento(regione.totale_ospedalizzati), "#0000bb")
-	plotConMediaMobile(regione.nuovi_vaccini, "#00ff00")
 
 d = Data()
 plot(d.italia)
