@@ -17,6 +17,7 @@ class DataRegione:
 			return [0 for i in range(dayCount)]
 
 		self.firstDay = firstDay
+		self.dayCount = dayCount
 		self.code = code
 		self.name = name
 
@@ -45,7 +46,10 @@ class DataRegione:
 	def addVaccino(self, jsonObject):
 		date = dateStringToObject(jsonObject["data_somministrazione"])
 		i = (date - self.firstDay).days
-		self.nuovi_vaccini[i] += jsonObject["totale"]
+		try:
+			self.nuovi_vaccini[i] += jsonObject["totale"]
+		except:
+			print("Unable to get vaccini from: " + jsonObject)
 
 	def trim(self):
 		# TODO non togliere zero reali in fondo
@@ -62,7 +66,9 @@ class DataRegione:
 		self.tamponi = np.trim_zeros(self.tamponi, 'b')
 		self.casi_testati = np.trim_zeros(self.casi_testati, 'b')
 		self.ingressi_terapia_intensiva = np.trim_zeros(self.ingressi_terapia_intensiva, 'b')
+
 		self.nuovi_vaccini = np.trim_zeros(self.nuovi_vaccini, 'b')
+		self.nuovi_vaccini = self.nuovi_vaccini[:min(len(self.nuovi_vaccini), self.dayCount - 1)]
 
 
 class Data:
