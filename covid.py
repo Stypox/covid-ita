@@ -77,7 +77,7 @@ class DataRegione:
 		self.ingressi_terapia_intensiva = np.trim_zeros(self.ingressi_terapia_intensiva, 'b')
 
 		# rimuovere l'ultima giornata dei vaccini, di solito non e' ancora a posto
-		self.nuovi_vaccini = np.trim_zeros(self.nuovi_vaccini)
+		self.nuovi_vaccini = np.trim_zeros(self.nuovi_vaccini, 'b')
 		self.nuovi_vaccini = self.nuovi_vaccini[:min(len(self.nuovi_vaccini), self.dayCount - 1)]
 
 		# calcolo percentuale positivi
@@ -195,6 +195,8 @@ def plot(regione):
 	plotConMediaMobile(axis[1, 1], regione.nuovi_vaccini, 7, "#00ff00", "Nuovi vaccini")
 	plotConMediaMobile(axis[1, 1], incremento(regione.nuovi_vaccini), 7, "#00bb00", "Nuovi vaccini - incremento")
 
+	plt.sca(axis[1, 1])
+	plt.xlim(datetime.date(2020, 12, 22), datetime.date.today())
 	setupSubplots([axis[0,0], axis[0,1], axis[1,0], axis[1,1]])
 	plt.show()
 
