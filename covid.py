@@ -126,8 +126,8 @@ def incremento(arr):
 		inc.append(arr[i+1] - arr[i])
 	return inc
 
-def mediaMobile(arr):
-	rangeSize = 7
+def mediaMobile(arr, giorni):
+	rangeSize = giorni
 	mm = [0] * (rangeSize // 2)
 	for i in range(len(arr)-rangeSize+1):
 		mm.append(np.average(arr[i:i+rangeSize]))
@@ -135,20 +135,16 @@ def mediaMobile(arr):
 
 
 
-def plotConMediaMobile(subplot, arr, colore, label):
-	mm = mediaMobile(arr)
+def plotConMediaMobile(subplot, arr, giorni, colore, label):
+	mm = mediaMobile(arr, giorni)
 	subplot.plot_date(d.date[0:len(arr)], arr, linewidth=0.5, color=colore+"77", fmt="b-")
 	subplot.plot_date(d.date[0:len(mm)], mm, linewidth=1.2, color=colore+"ff", fmt="b-", label=label)
-
-def plotConMediaMobileEIncremento(subplot, arr, colore, label):
-	plotConMediaMobile(subplot, arr, colore, label)
-	plotConMediaMobile(subplot, incremento(arr), colore.replace("ff", "bb"), label + " - incremento")
 
 def plotPercentualePositivi(subplot, regione, colore):
 	incrementoTamponi = incremento(regione.tamponi)
 	incrementoTamponi[0] = incrementoTamponi[1]
 	incrementoTamponi[297] = (incrementoTamponi[296] + incrementoTamponi[298]) / 2
-	plotConMediaMobile(subplot, np.divide(regione.nuovi_positivi, incrementoTamponi), colore, "Percentuale positivi")
+	plotConMediaMobile(subplot, np.divide(regione.nuovi_positivi, incrementoTamponi), 7, colore, "Percentuale positivi")
 
 def setupSubplots(subplots):
 	for subplot in subplots:
@@ -160,14 +156,19 @@ def setupSubplots(subplots):
 
 def plot(regione):
 	_, axis = plt.subplots(2, 2)
-	subplots = [axis[0,0], axis[0,1], axis[1,0], axis[1,1]]
 
-	plotConMediaMobileEIncremento(axis[0, 0], regione.nuovi_positivi, "#ff0000", "Nuovi positivi")
-	plotConMediaMobileEIncremento(axis[0, 0], regione.totale_ospedalizzati, "#0000ff", "Totale ospedalizzati")
+	plotConMediaMobile(axis[0, 0], regione.nuovi_positivi, 7, "#ff0000", "Nuovi positivi")
+	plotConMediaMobile(axis[0, 0], regione.totale_ospedalizzati, 7, "#0000ff", "Totale ospedalizzati")
+
+	plotConMediaMobile(axis[0, 1], incremento(regione.nuovi_positivi), 14, "#bb0000", "Nuovi positivi")
+	plotConMediaMobile(axis[0, 1], incremento(regione.totale_ospedalizzati), 7, "#0000bb", "Totale ospedalizzati")
+
 	plotPercentualePositivi(axis[1, 0], regione, "#aaaa00")
-	plotConMediaMobileEIncremento(axis[1, 1], regione.nuovi_vaccini, "#00ff00", "Nuovi vaccini")
 
-	setupSubplots(subplots)
+	plotConMediaMobile(axis[1, 1], regione.nuovi_vaccini, 7, "#00ff00", "Nuovi vaccini")
+	plotConMediaMobile(axis[1, 1], incremento(regione.nuovi_vaccini), 7, "#00bb00", "Nuovi vaccini")
+
+	setupSubplots([axis[0,0], axis[0,1], axis[1,0], axis[1,1]])
 	plt.show()
 
 d = Data()
