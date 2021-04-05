@@ -35,6 +35,7 @@ class DataRegione:
 		self.casi_testati = buildArray()
 		self.ingressi_terapia_intensiva = buildArray()
 		self.nuovi_vaccini = buildArray()
+		self.percentuale_positivi = buildArray()
 
 	def addDataPoint(self, jsonObject):
 		date = dateStringToObject(jsonObject["data"])
@@ -51,8 +52,8 @@ class DataRegione:
 		except:
 			print("Unable to get vaccini from: " + str(jsonObject))
 
-	def trim(self):
-		# TODO non togliere zero reali in fondo
+	def finalize(self):
+		# togliere zeri in fondo TODO non togliere zero reali
 		self.ricoverati_con_sintomi = np.trim_zeros(self.ricoverati_con_sintomi, 'b')
 		self.terapia_intensiva = np.trim_zeros(self.terapia_intensiva, 'b')
 		self.totale_ospedalizzati = np.trim_zeros(self.totale_ospedalizzati, 'b')
@@ -67,8 +68,22 @@ class DataRegione:
 		self.casi_testati = np.trim_zeros(self.casi_testati, 'b')
 		self.ingressi_terapia_intensiva = np.trim_zeros(self.ingressi_terapia_intensiva, 'b')
 
+		# rimuovere l'ultima giornata dei vaccini, di solito non e' ancora a posto
 		self.nuovi_vaccini = np.trim_zeros(self.nuovi_vaccini, 'b')
 		self.nuovi_vaccini = self.nuovi_vaccini[:min(len(self.nuovi_vaccini), self.dayCount - 1)]
+
+		# calcolo percentuale positivi
+		incrementoTamponi = incremento(self.tamponi)
+		for i in range(1, min(len(self.nuovi_positivi), len(incrementoTamponi))):
+			if self.nuovi_positivi[i] >= incrementoTamponi[i] or incrementoTamponi[i] == 0:
+				self.percentuale_positivi[i] = self.percentuale_positivi[i-1]
+			else:
+				self.percentuale_positivi[i] = self.nuovi_positivi[i] / incrementoTamponi[i]
+				if (abs(self.percentuale_positivi[i] - self.percentuale_positivi[i-1]) > 0.2):
+					average = (self.percentuale_positivi[i] + self.percentuale_positivi[i-1]) / 2
+					self.percentuale_positivi[i] = average
+					self.percentuale_positivi[i-1] = average
+		self.percentuale_positivi = np.trim_zeros(self.percentuale_positivi, 'b')
 
 
 class Data:
@@ -85,7 +100,7 @@ class Data:
 		jsonVaccini = requests.get(JSON_VACCINI_URL).json()["data"]
 		for dataPoint in jsonVaccini:
 			self.italia.addVaccino(dataPoint)
-		self.italia.trim()
+		self.italia.finalize()
 
 		jsonRegioni = requests.get(JSON_REGIONI_URL).json()
 		self.piemonte = DataRegione(firstDay, dayCount, 1, "Piemonte")
@@ -117,7 +132,7 @@ class Data:
 				if regione.code == dataPoint["codice_regione"]:
 					regione.addDataPoint(dataPoint)
 		for regione in self.regioni:
-			regione.trim()
+			regione.finalize()
 
 
 def incremento(arr):
@@ -141,9 +156,6 @@ def plotConMediaMobile(subplot, arr, giorni, colore, label):
 	subplot.plot_date(d.date[0:len(mm)], mm, linewidth=1.2, color=colore+"ff", fmt="b-", label=label)
 
 def plotPercentualePositivi(subplot, regione, colore):
-	incrementoTamponi = incremento(regione.tamponi)
-	incrementoTamponi[0] = incrementoTamponi[1]
-	incrementoTamponi[297] = (incrementoTamponi[296] + incrementoTamponi[298]) / 2
 	plotConMediaMobile(subplot, np.divide(regione.nuovi_positivi, incrementoTamponi), 7, colore, "Percentuale positivi")
 
 def setupSubplots(subplots):
@@ -163,10 +175,11 @@ def plot(regione):
 	plotConMediaMobile(axis[0, 1], incremento(regione.nuovi_positivi), 14, "#bb0000", "Nuovi positivi")
 	plotConMediaMobile(axis[0, 1], incremento(regione.totale_ospedalizzati), 7, "#0000bb", "Totale ospedalizzati")
 
-	plotPercentualePositivi(axis[1, 0], regione, "#aaaa00")
+	plotConMediaMobile(axis[1, 0], regione.percentuale_positivi, 7, "#aaaa00", "Percentuale positivi")
+	plotConMediaMobile(axis[1, 0], incremento(regione.percentuale_positivi), 7, "#555500", "Percentuale positivi - incremento")
 
 	plotConMediaMobile(axis[1, 1], regione.nuovi_vaccini, 7, "#00ff00", "Nuovi vaccini")
-	plotConMediaMobile(axis[1, 1], incremento(regione.nuovi_vaccini), 7, "#00bb00", "Nuovi vaccini")
+	plotConMediaMobile(axis[1, 1], incremento(regione.nuovi_vaccini), 7, "#00bb00", "Nuovi vaccini - incremento")
 
 	setupSubplots([axis[0,0], axis[0,1], axis[1,0], axis[1,1]])
 	plt.show()
