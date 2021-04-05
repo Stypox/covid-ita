@@ -175,13 +175,13 @@ def plotPercentualePositivi(subplot, regione, colore):
 def setupSubplots(subplots):
 	for subplot in subplots:
 		# line at y=0
-		subplot.plot_date(d.date[0:d.numero_giorni], [0 for i in range(d.numero_giorni)], linewidth=0.5, color="#00000077", fmt="b-")
+		subplot.axhline(y=0, color="#00000077")
 		plt.sca(subplot)
 		plt.xticks(rotation=90)
 		plt.legend()
 
 def plot(regione):
-	_, axis = plt.subplots(2, 2)
+	_, axis = plt.subplots(2, 2, num=regione.name)
 
 	plotConMediaMobile(axis[0, 0], regione.nuovi_positivi, 7, "#ff0000", "Nuovi positivi")
 	plotConMediaMobile(axis[0, 0], regione.totale_ospedalizzati, 7, "#0000ff", "Totale ospedalizzati")
@@ -194,11 +194,12 @@ def plot(regione):
 
 	plotConMediaMobile(axis[1, 1], regione.nuovi_vaccini, 7, "#00ff00", "Nuovi vaccini")
 	plotConMediaMobile(axis[1, 1], incremento(regione.nuovi_vaccini), 7, "#00bb00", "Nuovi vaccini - incremento")
-
 	plt.sca(axis[1, 1])
 	plt.xlim(datetime.date(2020, 12, 22), datetime.date.today())
+
 	setupSubplots([axis[0,0], axis[0,1], axis[1,0], axis[1,1]])
-	plt.show()
+	plt.draw()
 
 d = Data()
 plot(d.italia)
+plt.show()
