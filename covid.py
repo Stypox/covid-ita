@@ -49,7 +49,7 @@ class DataRegione:
 		try:
 			self.nuovi_vaccini[i] += jsonObject["totale"]
 		except:
-			print("Unable to get vaccini from: " + jsonObject)
+			print("Unable to get vaccini from: " + str(jsonObject))
 
 	def trim(self):
 		# TODO non togliere zero reali in fondo
@@ -135,32 +135,39 @@ def mediaMobile(arr):
 
 
 
-def plotConMediaMobile(arr, colore, label):
+def plotConMediaMobile(subplot, arr, colore, label):
 	mm = mediaMobile(arr)
-	plt.plot_date(d.date[0:len(arr)], arr, linewidth=0.5, color=colore+"77", fmt="b-")
-	plt.plot_date(d.date[0:len(mm)], mm, linewidth=1.2, color=colore+"ff", fmt="b-", label=label)
+	subplot.plot_date(d.date[0:len(arr)], arr, linewidth=0.5, color=colore+"77", fmt="b-")
+	subplot.plot_date(d.date[0:len(mm)], mm, linewidth=1.2, color=colore+"ff", fmt="b-", label=label)
 
-def plotConMediaMobileEIncremento(arr, colore, label):
-	plotConMediaMobile(arr, colore, label)
-	plotConMediaMobile(incremento(arr), colore.replace("ff", "bb"), label + " - incremento")
+def plotConMediaMobileEIncremento(subplot, arr, colore, label):
+	plotConMediaMobile(subplot, arr, colore, label)
+	plotConMediaMobile(subplot, incremento(arr), colore.replace("ff", "bb"), label + " - incremento")
 
-def plotLineaZero(colore):
-	plt.plot_date(d.date[0:d.numero_giorni], [0 for i in range(d.numero_giorni)], linewidth=0.5, color=colore+"77", fmt="b-")
-
-def plotPercentualePositivi(regione, colore):
+def plotPercentualePositivi(subplot, regione, colore):
 	incrementoTamponi = incremento(regione.tamponi)
 	incrementoTamponi[0] = incrementoTamponi[1]
 	incrementoTamponi[297] = (incrementoTamponi[296] + incrementoTamponi[298]) / 2
-	plotConMediaMobile(np.multiply(np.divide(regione.nuovi_positivi, incrementoTamponi), 50000), colore, "Percentuale positivi")
+	plotConMediaMobile(subplot, np.divide(regione.nuovi_positivi, incrementoTamponi), colore, "Percentuale positivi")
+
+def setupSubplots(subplots):
+	for subplot in subplots:
+		# line at y=0
+		subplot.plot_date(d.date[0:d.numero_giorni], [0 for i in range(d.numero_giorni)], linewidth=0.5, color="#00000077", fmt="b-")
+		plt.sca(subplot)
+		plt.xticks(rotation=90)
+		plt.legend()
 
 def plot(regione):
-	plotConMediaMobileEIncremento(regione.nuovi_positivi, "#ff0000", "Nuovi positivi")
-	plotConMediaMobileEIncremento(regione.totale_ospedalizzati, "#0000ff", "Totale ospedalizzati")
-	plotConMediaMobileEIncremento(regione.nuovi_vaccini, "#00ff00", "Nuovi vaccini")
-	plotPercentualePositivi(regione, "#aaaa00")
-	plotLineaZero("#000000")
-	plt.xticks(rotation=90)
-	plt.legend()
+	_, axis = plt.subplots(2, 2)
+	subplots = [axis[0,0], axis[0,1], axis[1,0], axis[1,1]]
+
+	plotConMediaMobileEIncremento(axis[0, 0], regione.nuovi_positivi, "#ff0000", "Nuovi positivi")
+	plotConMediaMobileEIncremento(axis[0, 0], regione.totale_ospedalizzati, "#0000ff", "Totale ospedalizzati")
+	plotPercentualePositivi(axis[1, 0], regione, "#aaaa00")
+	plotConMediaMobileEIncremento(axis[1, 1], regione.nuovi_vaccini, "#00ff00", "Nuovi vaccini")
+
+	setupSubplots(subplots)
 	plt.show()
 
 d = Data()
