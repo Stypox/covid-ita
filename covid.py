@@ -37,6 +37,11 @@ class DataRegione:
 		self.nuovi_vaccini = buildArray()
 		self.percentuale_positivi = buildArray()
 
+	def isCode(self, code):
+		if isinstance(self.code, list):
+			return code in self.code
+		return code == self.code
+
 	def addDataPoint(self, jsonObject):
 		date = dateStringToObject(jsonObject["data"])
 		i = (date - self.firstDay).days
@@ -47,10 +52,13 @@ class DataRegione:
 	def addVaccino(self, jsonObject):
 		date = dateStringToObject(jsonObject["data_somministrazione"])
 		i = (date - self.firstDay).days
-		try:
-			self.nuovi_vaccini[i] += jsonObject["totale"]
-		except:
-			print("Unable to get vaccini from: " + str(jsonObject))
+
+		if i == len(self.nuovi_vaccini):
+			self.nuovi_vaccini.append(0)
+		elif i > len(self.nuovi_vaccini):
+			print("Nuovi vaccini troppo nel futuro: " + date)
+
+		self.nuovi_vaccini[i] += jsonObject["totale"]
 
 	def finalize(self):
 		# togliere zeri in fondo TODO non togliere zero reali
@@ -69,7 +77,7 @@ class DataRegione:
 		self.ingressi_terapia_intensiva = np.trim_zeros(self.ingressi_terapia_intensiva, 'b')
 
 		# rimuovere l'ultima giornata dei vaccini, di solito non e' ancora a posto
-		self.nuovi_vaccini = np.trim_zeros(self.nuovi_vaccini, 'b')
+		self.nuovi_vaccini = np.trim_zeros(self.nuovi_vaccini)
 		self.nuovi_vaccini = self.nuovi_vaccini[:min(len(self.nuovi_vaccini), self.dayCount - 1)]
 
 		# calcolo percentuale positivi
@@ -88,21 +96,13 @@ class DataRegione:
 
 class Data:
 	def __init__(self):
+
 		jsonItalia = requests.get(JSON_ITALIA_URL).json()
 		self.date = [dateStringToObject(e["data"]) for e in jsonItalia]
 		firstDay = self.date[0]
 		dayCount = len(jsonItalia)
 		self.numero_giorni = dayCount
 
-		self.italia = DataRegione(firstDay, dayCount, -1, "Tutta Italia")
-		for dataPoint in jsonItalia:
-			self.italia.addDataPoint(dataPoint)
-		jsonVaccini = requests.get(JSON_VACCINI_URL).json()["data"]
-		for dataPoint in jsonVaccini:
-			self.italia.addVaccino(dataPoint)
-		self.italia.finalize()
-
-		jsonRegioni = requests.get(JSON_REGIONI_URL).json()
 		self.piemonte = DataRegione(firstDay, dayCount, 1, "Piemonte")
 		self.valle_d_aosta = DataRegione(firstDay, dayCount, 2, "Valle d'Aosta")
 		self.lombardia = DataRegione(firstDay, dayCount, 3, "Lombardia")
@@ -123,13 +123,27 @@ class Data:
 		self.sicilia = DataRegione(firstDay, dayCount, 19, "Sicilia")
 		self.sardegna = DataRegione(firstDay, dayCount, 20, "Sardegna")
 		self.alto_adige = DataRegione(firstDay, dayCount, 21, "Alto Adige")
-		self.trentino = DataRegione(firstDay, dayCount, 22, "Trentino")
+		self.trentino = DataRegione(firstDay, dayCount, [22, 4], "Trentino")
 		self.regioni = [self.piemonte, self.valle_d_aosta, self.lombardia, self.veneto, self.friuli_venezia_giulia, self.liguria,
 			self.emilia_romagna, self.toscana, self.umbria, self.marche, self.lazio, self.abruzzo, self.abruzzo, self.molise,
 			self.campania, self.puglia, self.basilicata, self.calabria, self.sicilia, self.sardegna, self.alto_adige, self.trentino]
+		self.italia = DataRegione(firstDay, dayCount, -1, "Tutta Italia")
+
+		for dataPoint in jsonItalia:
+			self.italia.addDataPoint(dataPoint)
+
+		jsonVaccini = requests.get(JSON_VACCINI_URL).json()["data"]
+		for dataPoint in jsonVaccini:
+			self.italia.addVaccino(dataPoint)
+			for regione in self.regioni:
+				if regione.isCode(dataPoint["codice_regione_ISTAT"]):
+					regione.addVaccino(dataPoint)
+		self.italia.finalize()
+
+		jsonRegioni = requests.get(JSON_REGIONI_URL).json()
 		for dataPoint in jsonRegioni:
 			for regione in self.regioni:
-				if regione.code == dataPoint["codice_regione"]:
+				if regione.isCode(dataPoint["codice_regione"]):
 					regione.addDataPoint(dataPoint)
 		for regione in self.regioni:
 			regione.finalize()
