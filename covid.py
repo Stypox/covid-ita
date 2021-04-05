@@ -135,14 +135,14 @@ def mediaMobile(arr):
 
 
 
-def plotConMediaMobile(arr, colore):
+def plotConMediaMobile(arr, colore, label):
 	mm = mediaMobile(arr)
 	plt.plot_date(d.date[0:len(arr)], arr, linewidth=0.5, color=colore+"77", fmt="b-")
-	plt.plot_date(d.date[0:len(mm)], mm, linewidth=1.2, color=colore+"ff", fmt="b-")
+	plt.plot_date(d.date[0:len(mm)], mm, linewidth=1.2, color=colore+"ff", fmt="b-", label=label)
 
-def plotConMediaMobileEIncremento(arr, colore):
-	plotConMediaMobile(arr, colore)
-	plotConMediaMobile(incremento(arr), colore.replace("ff", "bb"))
+def plotConMediaMobileEIncremento(arr, colore, label):
+	plotConMediaMobile(arr, colore, label)
+	plotConMediaMobile(incremento(arr), colore.replace("ff", "bb"), label + " - incremento")
 
 def plotLineaZero(colore):
 	plt.plot_date(d.date[0:d.numero_giorni], [0 for i in range(d.numero_giorni)], linewidth=0.5, color=colore+"77", fmt="b-")
@@ -151,16 +151,17 @@ def plotPercentualePositivi(regione, colore):
 	incrementoTamponi = incremento(regione.tamponi)
 	incrementoTamponi[0] = incrementoTamponi[1]
 	incrementoTamponi[297] = (incrementoTamponi[296] + incrementoTamponi[298]) / 2
-	plotConMediaMobile(np.multiply(np.divide(regione.nuovi_positivi, incrementoTamponi), 50000), colore)
+	plotConMediaMobile(np.multiply(np.divide(regione.nuovi_positivi, incrementoTamponi), 50000), colore, "Percentuale positivi")
 
 def plot(regione):
-	plotConMediaMobileEIncremento(regione.nuovi_positivi, "#ff0000")
-	plotConMediaMobileEIncremento(regione.totale_ospedalizzati, "#0000ff")
-	plotConMediaMobileEIncremento(regione.nuovi_vaccini, "#00ff00")
+	plotConMediaMobileEIncremento(regione.nuovi_positivi, "#ff0000", "Nuovi positivi")
+	plotConMediaMobileEIncremento(regione.totale_ospedalizzati, "#0000ff", "Totale ospedalizzati")
+	plotConMediaMobileEIncremento(regione.nuovi_vaccini, "#00ff00", "Nuovi vaccini")
 	plotPercentualePositivi(regione, "#aaaa00")
+	plotLineaZero("#000000")
+	plt.xticks(rotation=90)
+	plt.legend()
+	plt.show()
 
 d = Data()
 plot(d.italia)
-plotLineaZero("#000000")
-plt.xticks(rotation=90)
-plt.show()
