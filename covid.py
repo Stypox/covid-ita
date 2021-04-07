@@ -167,10 +167,7 @@ def mediaMobile(arr, giorni):
 def plotConMediaMobile(subplot, arr, giorni, colore, label):
 	mm = mediaMobile(arr, giorni)
 	subplot.plot_date(d.date[0:len(arr)], arr, linewidth=0.5, color=colore+"77", fmt="b-")
-	subplot.plot_date(d.date[0:len(mm)], mm, linewidth=1.2, color=colore+"ff", fmt="b-", label=label)
-
-def plotPercentualePositivi(subplot, regione, colore):
-	plotConMediaMobile(subplot, np.divide(regione.nuovi_positivi, incrementoTamponi), 7, colore, "Percentuale positivi")
+	return subplot.plot_date(d.date[0:len(mm)], mm, linewidth=1.2, color=colore+"ff", fmt="b-", label=label)
 
 def setupSubplots(subplots):
 	for subplot in subplots:
@@ -178,26 +175,42 @@ def setupSubplots(subplots):
 		subplot.axhline(y=0, color="#00000077")
 		plt.sca(subplot)
 		plt.xticks(rotation=90)
-		plt.legend()
+		plt.legend(loc=0)
 
 def plot(regione):
 	_, axis = plt.subplots(2, 2, num=regione.name)
 
 	plotConMediaMobile(axis[0, 0], regione.nuovi_positivi, 7, "#ff0000", "Nuovi positivi")
 	plotConMediaMobile(axis[0, 0], regione.totale_ospedalizzati, 7, "#0000ff", "Totale ospedalizzati")
+	plotConMediaMobile(axis[0, 0], incremento(regione.deceduti), 7, "#00aaaa", "Nuovi deceduti")
 
 	plotConMediaMobile(axis[0, 1], incremento(regione.nuovi_positivi), 14, "#bb0000", "Nuovi positivi - incremento")
 	plotConMediaMobile(axis[0, 1], incremento(regione.totale_ospedalizzati), 7, "#0000bb", "Totale ospedalizzati - incremento")
 
-	plotConMediaMobile(axis[1, 0], regione.percentuale_positivi, 7, "#aaaa00", "Percentuale positivi")
-	plotConMediaMobile(axis[1, 0], incremento(regione.percentuale_positivi), 7, "#555500", "Percentuale positivi - incremento")
+	line1 = plotConMediaMobile(axis[1, 0], regione.percentuale_positivi, 7, "#aaaa00", "Percentuale positivi")
+	line2 = plotConMediaMobile(axis[1, 0], incremento(regione.percentuale_positivi), 7, "#555500", "Percentuale positivi - incremento")
+	axisTamponi = axis[1, 0].twinx()
+	line3 = plotConMediaMobile(axisTamponi, incremento(regione.tamponi), 7, "#aa00aa", "Tamponi")
 
 	plotConMediaMobile(axis[1, 1], regione.nuovi_vaccini, 7, "#00ff00", "Nuovi vaccini")
 	plotConMediaMobile(axis[1, 1], incremento(regione.nuovi_vaccini), 7, "#00bb00", "Nuovi vaccini - incremento")
-	plt.sca(axis[1, 1])
-	plt.xlim(datetime.date(2020, 12, 22), datetime.date.today())
 
 	setupSubplots([axis[0,0], axis[0,1], axis[1,0], axis[1,1]])
+
+	plt.sca(axis[0, 1])
+	maxIncrementoNuoviPositivi = max(mediaMobile(incremento(regione.nuovi_positivi), 7))
+	plt.ylim(-1.2*maxIncrementoNuoviPositivi, 1.2*maxIncrementoNuoviPositivi)
+
+	plt.sca(axis[1, 0])
+	plt.ylim(bottom=-0.03)
+	linesWithCommonLegend = line1 + line2 + line3
+	plt.legend(linesWithCommonLegend, [line.get_label() for line in linesWithCommonLegend])
+
+	plt.sca(axis[1, 1])
+	plt.xlim(datetime.date(2020, 12, 22), datetime.date.today())
+	plt.ylim(bottom=-max(regione.nuovi_vaccini)/10)
+
+	plt.tight_layout()
 	plt.draw()
 
 d = Data()
