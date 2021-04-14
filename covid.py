@@ -164,7 +164,8 @@ def mediaMobile(arr, giorni):
 
 
 
-def plotConMediaMobile(subplot, arr, giorni, colore, label):
+def plotConMediaMobile(subplot, arr, giorni, colore, label, addTotalToLabel=False):
+	label = f"{label} - Tot {np.sum(arr):,d}" if addTotalToLabel else label
 	mm = mediaMobile(arr, giorni)
 	subplot.plot_date(d.date[0:len(arr)], arr, linewidth=0.5, color=colore+"77", fmt="b-")
 	return subplot.plot_date(d.date[0:len(mm)], mm, linewidth=1.2, color=colore+"ff", fmt="b-", label=label)
@@ -180,9 +181,9 @@ def setupSubplots(subplots):
 def plot(regione):
 	_, axis = plt.subplots(2, 2, num=regione.name)
 
-	plotConMediaMobile(axis[0, 0], regione.nuovi_positivi, 7, "#ff0000", "Nuovi positivi")
+	plotConMediaMobile(axis[0, 0], regione.nuovi_positivi, 7, "#ff0000", "Nuovi positivi", True)
 	plotConMediaMobile(axis[0, 0], regione.totale_ospedalizzati, 7, "#0000ff", "Totale ospedalizzati")
-	plotConMediaMobile(axis[0, 0], incremento(regione.deceduti), 7, "#00aaaa", "Nuovi deceduti")
+	plotConMediaMobile(axis[0, 0], incremento(regione.deceduti), 7, "#00aaaa", "Nuovi deceduti", True)
 
 	plotConMediaMobile(axis[0, 1], incremento(regione.nuovi_positivi), 14, "#bb0000", "Nuovi positivi - incremento")
 	plotConMediaMobile(axis[0, 1], incremento(regione.totale_ospedalizzati), 7, "#0000bb", "Totale ospedalizzati - incremento")
@@ -190,9 +191,9 @@ def plot(regione):
 	line1 = plotConMediaMobile(axis[1, 0], regione.percentuale_positivi, 7, "#aaaa00", "Percentuale positivi")
 	line2 = plotConMediaMobile(axis[1, 0], incremento(regione.percentuale_positivi), 7, "#555500", "Percentuale positivi - incremento")
 	axisTamponi = axis[1, 0].twinx()
-	line3 = plotConMediaMobile(axisTamponi, incremento(regione.tamponi), 7, "#aa00aa", "Tamponi")
+	line3 = plotConMediaMobile(axisTamponi, incremento(regione.tamponi), 7, "#aa00aa", "Tamponi", True)
 
-	plotConMediaMobile(axis[1, 1], regione.nuovi_vaccini, 7, "#00ff00", "Nuovi vaccini")
+	plotConMediaMobile(axis[1, 1], regione.nuovi_vaccini, 7, "#00ff00", "Nuovi vaccini", True)
 	plotConMediaMobile(axis[1, 1], incremento(regione.nuovi_vaccini), 7, "#00bb00", "Nuovi vaccini - incremento")
 
 	setupSubplots([axis[0,0], axis[0,1], axis[1,0], axis[1,1]])
