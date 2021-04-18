@@ -167,8 +167,8 @@ def mediaMobile(arr, giorni):
 def plotConMediaMobile(subplot, arr, giorni, colore, label, addTotalToLabel=False):
 	label = f"{label} - Tot {np.sum(arr):,d}" if addTotalToLabel else label
 	mm = mediaMobile(arr, giorni)
-	subplot.plot_date(d.date[0:len(arr)], arr, linewidth=0.5, color=colore+"77", fmt="b-")
-	return subplot.plot_date(d.date[0:len(mm)], mm, linewidth=1.2, color=colore+"ff", fmt="b-", label=label)
+	subplot.plot_date(d.date[0:len(arr)], arr, linewidth=0.5, color=colore+"77", fmt="-")
+	return subplot.plot_date(d.date[0:len(mm)], mm, linewidth=1.2, color=colore+"ff", fmt="-", label=label)
 
 def setupSubplots(subplots):
 	for subplot in subplots:
