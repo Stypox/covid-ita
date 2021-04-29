@@ -165,7 +165,7 @@ def mediaMobile(arr, giorni):
 
 
 def plotConMediaMobile(subplot, arr, giorni, colore, label, addTotalToLabel=False):
-	label = f"{label} - Tot {np.sum(arr):,d}" if addTotalToLabel else label
+	label = f"{label} - Tot {int(np.sum(arr)):,d}" if addTotalToLabel else label
 	mm = mediaMobile(arr, giorni)
 	subplot.plot_date(d.date[0:len(arr)], arr, linewidth=0.5, color=colore+"77", fmt="b-")
 	return subplot.plot_date(d.date[0:len(mm)], mm, linewidth=1.2, color=colore+"ff", fmt="b-", label=label)
@@ -209,7 +209,7 @@ def plot(regione):
 
 	plt.sca(axis[1, 1])
 	plt.xlim(datetime.date(2020, 12, 22), datetime.date.today())
-	plt.ylim(bottom=-max(regione.nuovi_vaccini)/10)
+	plt.ylim(bottom=-max(regione.nuovi_vaccini + [0])/10)
 
 	plt.tight_layout()
 	plt.draw()
