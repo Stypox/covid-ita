@@ -37,9 +37,12 @@ class DataRegione:
 		self.nuovi_vaccini = buildArray()
 		self.percentuale_positivi = buildArray()
 
-	def isCode(self, code):
-		if isinstance(self.code, list):
-			return code in self.code
+	def isCode(self, code, area = None):
+		if code == 4 and area is not None:
+			if area == "PAB":
+				code = 21
+			elif area == "PAT":
+				code = 22
 		return code == self.code
 
 	def addDataPoint(self, jsonObject):
@@ -123,7 +126,7 @@ class Data:
 		self.sicilia = DataRegione(firstDay, dayCount, 19, "Sicilia")
 		self.sardegna = DataRegione(firstDay, dayCount, 20, "Sardegna")
 		self.alto_adige = DataRegione(firstDay, dayCount, 21, "Alto Adige")
-		self.trentino = DataRegione(firstDay, dayCount, [22, 4], "Trentino")
+		self.trentino = DataRegione(firstDay, dayCount, 22, "Trentino")
 		self.regioni = [self.piemonte, self.valle_d_aosta, self.lombardia, self.veneto, self.friuli_venezia_giulia, self.liguria,
 			self.emilia_romagna, self.toscana, self.umbria, self.marche, self.lazio, self.abruzzo, self.abruzzo, self.molise,
 			self.campania, self.puglia, self.basilicata, self.calabria, self.sicilia, self.sardegna, self.alto_adige, self.trentino]
@@ -136,7 +139,7 @@ class Data:
 		for dataPoint in jsonVaccini:
 			self.italia.addVaccino(dataPoint)
 			for regione in self.regioni:
-				if regione.isCode(dataPoint["codice_regione_ISTAT"]):
+				if regione.isCode(dataPoint["codice_regione_ISTAT"], dataPoint["area"]):
 					regione.addVaccino(dataPoint)
 		self.italia.finalize()
 
