@@ -84,7 +84,7 @@ class DataRegione:
 		self.nuovi_vaccini = self.nuovi_vaccini[:min(len(self.nuovi_vaccini), self.dayCount - 1)]
 
 		# calcolo percentuale positivi
-		incrementoTamponi = incremento(self.tamponi)
+		incrementoTamponi = incremento(self.tamponi, 1)
 		for i in range(1, min(len(self.nuovi_positivi), len(incrementoTamponi))):
 			if self.nuovi_positivi[i] >= incrementoTamponi[i] or incrementoTamponi[i] == 0:
 				self.percentuale_positivi[i] = self.percentuale_positivi[i-1]
@@ -152,14 +152,13 @@ class Data:
 			regione.finalize()
 
 
-def incremento(arr):
-	inc = [0]
-	for i in range(len(arr)-1):
-		inc.append(arr[i+1] - arr[i])
+def incremento(arr, rangeSize):
+	inc = arr[:rangeSize]
+	for i in range(len(arr) - rangeSize):
+		inc.append(arr[i + rangeSize] - arr[i])
 	return inc
 
-def mediaMobile(arr, giorni):
-	rangeSize = giorni
+def mediaMobile(arr, rangeSize):
 	mm = [0] * (rangeSize // 2)
 	for i in range(len(arr)-rangeSize+1):
 		mm.append(np.average(arr[i:i+rangeSize]))
@@ -186,24 +185,24 @@ def plot(regione):
 
 	plotConMediaMobile(axis[0, 0], regione.nuovi_positivi, 7, "#ff0000", "Nuovi positivi", True)
 	plotConMediaMobile(axis[0, 0], regione.totale_ospedalizzati, 7, "#0000ff", "Totale ospedalizzati")
-	plotConMediaMobile(axis[0, 0], incremento(regione.deceduti), 7, "#00aaaa", "Nuovi deceduti", True)
+	plotConMediaMobile(axis[0, 0], incremento(regione.deceduti, 7), 7, "#00aaaa", "Nuovi deceduti", True)
 
-	plotConMediaMobile(axis[0, 1], incremento(regione.nuovi_positivi), 14, "#bb0000", "Nuovi positivi - incremento")
-	plotConMediaMobile(axis[0, 1], incremento(regione.totale_ospedalizzati), 7, "#0000bb", "Totale ospedalizzati - incremento")
+	plotConMediaMobile(axis[0, 1], incremento(regione.nuovi_positivi, 7), 14, "#bb0000", "Nuovi positivi - incremento")
+	plotConMediaMobile(axis[0, 1], incremento(regione.totale_ospedalizzati, 7), 7, "#0000bb", "Totale ospedalizzati - incremento")
 
 	line1 = plotConMediaMobile(axis[1, 0], regione.percentuale_positivi, 7, "#aaaa00", "Percentuale positivi")
-	line2 = plotConMediaMobile(axis[1, 0], incremento(regione.percentuale_positivi), 7, "#555500", "Percentuale positivi - incremento")
+	line2 = plotConMediaMobile(axis[1, 0], incremento(regione.percentuale_positivi, 7), 7, "#555500", "Percentuale positivi - incremento")
 	axisTamponi = axis[1, 0].twinx()
-	line3 = plotConMediaMobile(axisTamponi, incremento(regione.tamponi), 7, "#aa00aa", "Tamponi", True)
+	line3 = plotConMediaMobile(axisTamponi, incremento(regione.tamponi, 7), 7, "#aa00aa", "Tamponi", True)
 
 	plotConMediaMobile(axis[1, 1], regione.nuovi_vaccini, 7, "#00ff00", "Nuovi vaccini", True)
-	plotConMediaMobile(axis[1, 1], incremento(regione.nuovi_vaccini), 7, "#00bb00", "Nuovi vaccini - incremento")
+	plotConMediaMobile(axis[1, 1], incremento(regione.nuovi_vaccini, 7), 7, "#00bb00", "Nuovi vaccini - incremento")
 
 	setupSubplots([axis[0,0], axis[0,1], axis[1,0], axis[1,1]])
 
 	plt.sca(axis[0, 1])
-	maxIncrementoNuoviPositivi = max(mediaMobile(incremento(regione.nuovi_positivi), 7))
-	plt.ylim(-1.2*maxIncrementoNuoviPositivi, 1.2*maxIncrementoNuoviPositivi)
+	maxIncrementoNuoviPositivi = max(mediaMobile(incremento(regione.nuovi_positivi, 7), 7))
+	plt.ylim(-maxIncrementoNuoviPositivi, 1.3*maxIncrementoNuoviPositivi)
 
 	plt.sca(axis[1, 0])
 	plt.ylim(bottom=-0.03)
@@ -212,7 +211,7 @@ def plot(regione):
 
 	plt.sca(axis[1, 1])
 	plt.xlim(datetime.date(2020, 12, 22), datetime.date.today())
-	plt.ylim(bottom=-max(regione.nuovi_vaccini + [0])/10)
+	plt.ylim(bottom=-max(regione.nuovi_vaccini + [0])/8)
 
 	plt.tight_layout()
 	plt.draw()
