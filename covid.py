@@ -153,9 +153,9 @@ class Data:
 
 
 def incremento(arr, rangeSize):
-	inc = arr[:rangeSize]
+	inc = [arr[i] / rangeSize for i in range(rangeSize)]
 	for i in range(len(arr) - rangeSize):
-		inc.append(arr[i + rangeSize] - arr[i])
+		inc.append((arr[i + rangeSize] - arr[i]) / rangeSize)
 	return inc
 
 def mediaMobile(arr, rangeSize):
@@ -185,15 +185,15 @@ def plot(regione):
 
 	plotConMediaMobile(axis[0, 0], regione.nuovi_positivi, 7, "#ff0000", "Nuovi positivi", True)
 	plotConMediaMobile(axis[0, 0], regione.totale_ospedalizzati, 7, "#0000ff", "Totale ospedalizzati")
-	plotConMediaMobile(axis[0, 0], incremento(regione.deceduti, 7), 7, "#00aaaa", "Nuovi deceduti", True)
+	plotConMediaMobile(axis[0, 0], incremento(regione.deceduti, 1), 7, "#00aaaa", "Nuovi deceduti", True)
 
-	plotConMediaMobile(axis[0, 1], incremento(regione.nuovi_positivi, 7), 14, "#bb0000", "Nuovi positivi - incremento")
+	plotConMediaMobile(axis[0, 1], incremento(regione.nuovi_positivi, 14), 7, "#bb0000", "Nuovi positivi - incremento")
 	plotConMediaMobile(axis[0, 1], incremento(regione.totale_ospedalizzati, 7), 7, "#0000bb", "Totale ospedalizzati - incremento")
 
 	line1 = plotConMediaMobile(axis[1, 0], regione.percentuale_positivi, 7, "#aaaa00", "Percentuale positivi")
 	line2 = plotConMediaMobile(axis[1, 0], incremento(regione.percentuale_positivi, 7), 7, "#555500", "Percentuale positivi - incremento")
 	axisTamponi = axis[1, 0].twinx()
-	line3 = plotConMediaMobile(axisTamponi, incremento(regione.tamponi, 7), 7, "#aa00aa", "Tamponi", True)
+	line3 = plotConMediaMobile(axisTamponi, incremento(regione.tamponi, 1), 7, "#aa00aa", "Tamponi", True)
 
 	plotConMediaMobile(axis[1, 1], regione.nuovi_vaccini, 7, "#00ff00", "Nuovi vaccini", True)
 	plotConMediaMobile(axis[1, 1], incremento(regione.nuovi_vaccini, 7), 7, "#00bb00", "Nuovi vaccini - incremento")
@@ -211,7 +211,7 @@ def plot(regione):
 
 	plt.sca(axis[1, 1])
 	plt.xlim(datetime.date(2020, 12, 22), datetime.date.today())
-	plt.ylim(bottom=-max(regione.nuovi_vaccini + [0])/8)
+	plt.ylim(bottom=-max(regione.nuovi_vaccini + [0])/10)
 
 	plt.tight_layout()
 	plt.draw()
