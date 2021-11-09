@@ -35,6 +35,7 @@ class DataRegione:
 		self.casi_testati = buildArray()
 		self.ingressi_terapia_intensiva = buildArray()
 		self.nuovi_vaccini = buildArray()
+		self.nuovi_vaccinati = buildArray() # i.e. new people vaccinated for the first time
 		self.percentuale_positivi = buildArray()
 
 	def isCode(self, code, area = None):
@@ -62,6 +63,7 @@ class DataRegione:
 			print("Nuovi vaccini troppo nel futuro: " + date)
 
 		self.nuovi_vaccini[i] += jsonObject["totale"]
+		self.nuovi_vaccinati[i] += jsonObject["prima_dose"] + jsonObject["pregressa_infezione"]
 
 	def finalize(self):
 		# togliere zeri in fondo TODO non togliere zero reali
@@ -82,6 +84,8 @@ class DataRegione:
 		# rimuovere l'ultima giornata dei vaccini, di solito non e' ancora a posto
 		self.nuovi_vaccini = np.trim_zeros(self.nuovi_vaccini, 'b')
 		self.nuovi_vaccini = self.nuovi_vaccini[:min(len(self.nuovi_vaccini), self.dayCount - 1)]
+		self.nuovi_vaccinati = np.trim_zeros(self.nuovi_vaccinati, 'b')
+		self.nuovi_vaccinati = self.nuovi_vaccinati[:min(len(self.nuovi_vaccinati), self.dayCount - 1)]
 
 		# calcolo percentuale positivi
 		incrementoTamponi = incremento(self.tamponi, 1)
@@ -196,6 +200,7 @@ def plot(regione):
 	line3 = plotConMediaMobile(axisTamponi, incremento(regione.tamponi, 1), 7, "#aa00aa", "Tamponi", True)
 
 	plotConMediaMobile(axis[1, 1], regione.nuovi_vaccini, 7, "#00ff00", "Nuovi vaccini", True)
+	plotConMediaMobile(axis[1, 1], regione.nuovi_vaccinati, 7, "#00ffff", "Nuovi vaccinati", True)
 	plotConMediaMobile(axis[1, 1], incremento(regione.nuovi_vaccini, 7), 7, "#00bb00", "Nuovi vaccini - incremento")
 
 	setupSubplots([axis[0,0], axis[0,1], axis[1,0], axis[1,1]])
