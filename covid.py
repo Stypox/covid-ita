@@ -54,7 +54,7 @@ class DataRegione:
 				getattr(self, key)[i] = (0 if value is None else int(value))
 
 	def addVaccino(self, jsonObject):
-		date = dateStringToObject(jsonObject["data_somministrazione"])
+		date = dateStringToObject(jsonObject["data"])
 		i = (date - self.firstDay).days
 
 		if i == len(self.nuovi_vaccini):
@@ -63,7 +63,7 @@ class DataRegione:
 			print("Nuovi vaccini troppo nel futuro: " + date)
 
 		self.nuovi_vaccini[i] += jsonObject["totale"]
-		self.nuovi_vaccinati[i] += jsonObject["prima_dose"] + jsonObject["pregressa_infezione"]
+		self.nuovi_vaccinati[i] += jsonObject["d1"] + jsonObject["dpi"]
 
 	def finalize(self):
 		# togliere zeri in fondo TODO non togliere zero reali
@@ -143,7 +143,7 @@ class Data:
 		for dataPoint in jsonVaccini:
 			self.italia.addVaccino(dataPoint)
 			for regione in self.regioni:
-				if regione.isCode(dataPoint["codice_regione_ISTAT"], dataPoint["area"]):
+				if regione.isCode(dataPoint["ISTAT"], dataPoint["area"]):
 					regione.addVaccino(dataPoint)
 		self.italia.finalize()
 
