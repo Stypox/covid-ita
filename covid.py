@@ -8,6 +8,8 @@ JSON_ITALIA_URL = "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dat
 JSON_VACCINI_URL = "https://raw.githubusercontent.com/italia/covid19-opendata-vaccini/master/dati/somministrazioni-vaccini-summary-latest.json"
 JSON_REGIONI_URL = "https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-json/dpc-covid19-ita-regioni.json"
 
+DAY_COUNT_DAILY = 978
+
 def dateStringToObject(dateString):
 	return datetime.date(int(dateString[:4]), int(dateString[5:7]), int(dateString[8:10]))
 
@@ -49,21 +51,36 @@ class DataRegione:
 	def addDataPoint(self, jsonObject):
 		date = dateStringToObject(jsonObject["data"])
 		i = (date - self.firstDay).days
+
+		if i < DAY_COUNT_DAILY:
+			days = [i]
+		else:
+			weekStart = i - (i - DAY_COUNT_DAILY) % 7
+			days = range(weekStart, weekStart+7)
+
 		for key, value in jsonObject.items():
 			if hasattr(self, key):
-				getattr(self, key)[i] = (0 if value is None else int(value))
+				for d in days:
+					getattr(self, key)[d] = (0 if value is None else int(value))
 
 	def addVaccino(self, jsonObject):
 		date = dateStringToObject(jsonObject["data"])
 		i = (date - self.firstDay).days
 
-		if i == len(self.nuovi_vaccini):
-			self.nuovi_vaccini.append(0)
-		elif i > len(self.nuovi_vaccini):
-			print("Nuovi vaccini troppo nel futuro: " + date)
+		if i < DAY_COUNT_DAILY:
+			days = [i]
+		else:
+			weekStart = i - (i - DAY_COUNT_DAILY) % 7
+			days = range(weekStart, weekStart+7)
 
-		self.nuovi_vaccini[i] += jsonObject["totale"]
-		self.nuovi_vaccinati[i] += jsonObject["d1"] + jsonObject["dpi"]
+		for d in days:
+			if d == len(self.nuovi_vaccini):
+				self.nuovi_vaccini.append(0)
+			elif d > len(self.nuovi_vaccini):
+				print(f"Nuovi vaccini troppo nel futuro: {date}")
+
+			self.nuovi_vaccini[d] += jsonObject["totale"] / len(days)
+			self.nuovi_vaccinati[d] += (jsonObject["d1"] + jsonObject["dpi"]) / len(days)
 
 	def finalize(self):
 		# togliere zeri in fondo TODO non togliere zero reali
@@ -105,10 +122,15 @@ class Data:
 	def __init__(self):
 
 		jsonItalia = requests.get(JSON_ITALIA_URL).json()
-		self.date = [dateStringToObject(e["data"]) for e in jsonItalia]
-		firstDay = self.date[0]
-		dayCount = len(jsonItalia)
+
+		dayCountWeekly = len(jsonItalia) - DAY_COUNT_DAILY
+		dayCount = DAY_COUNT_DAILY + 7 * dayCountWeekly
 		self.numero_giorni = dayCount
+
+		firstDay = dateStringToObject(jsonItalia[0]["data"])
+		self.date = [firstDay + datetime.timedelta(days=i) for i in range(dayCount)]
+		print(datetime.datetime.now().date() - firstDay)
+		print(dayCount)
 
 		self.piemonte = DataRegione(firstDay, dayCount, 1, "Piemonte")
 		self.valle_d_aosta = DataRegione(firstDay, dayCount, 2, "Valle d'Aosta")
@@ -146,6 +168,7 @@ class Data:
 				if regione.isCode(dataPoint["ISTAT"], dataPoint["area"]):
 					regione.addVaccino(dataPoint)
 		self.italia.finalize()
+		print(self.italia.tamponi)
 
 		jsonRegioni = requests.get(JSON_REGIONI_URL).json()
 		for dataPoint in jsonRegioni:
