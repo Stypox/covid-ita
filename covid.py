@@ -105,12 +105,15 @@ class DataRegione:
 		self.nuovi_vaccinati = self.nuovi_vaccinati[:min(len(self.nuovi_vaccinati), self.dayCount - 1)]
 
 		# calcolo percentuale positivi
-		incrementoTamponi = incremento(self.tamponi, 1)
-		for i in range(1, min(len(self.nuovi_positivi), len(incrementoTamponi))):
-			if self.nuovi_positivi[i] >= incrementoTamponi[i] or incrementoTamponi[i] == 0:
+		self.nuovi_tamponi = incremento(self.tamponi, 1)
+		for week in range(DAY_COUNT_DAILY, len(self.tamponi), 7):
+			for i in range(6, -1, -1):
+				self.nuovi_tamponi[week + i] = self.nuovi_tamponi[week] / 7
+		for i in range(1, min(len(self.nuovi_positivi), len(self.nuovi_tamponi))):
+			if self.nuovi_positivi[i] >= self.nuovi_tamponi[i] or self.nuovi_tamponi[i] == 0:
 				self.percentuale_positivi[i] = self.percentuale_positivi[i-1]
 			else:
-				self.percentuale_positivi[i] = self.nuovi_positivi[i] / incrementoTamponi[i]
+				self.percentuale_positivi[i] = self.nuovi_positivi[i] / self.nuovi_tamponi[i]
 				if (abs(self.percentuale_positivi[i] - self.percentuale_positivi[i-1]) > 0.2):
 					average = (self.percentuale_positivi[i] + self.percentuale_positivi[i-1]) / 2
 					self.percentuale_positivi[i] = average
@@ -129,8 +132,6 @@ class Data:
 
 		firstDay = dateStringToObject(jsonItalia[0]["data"])
 		self.date = [firstDay + datetime.timedelta(days=i) for i in range(dayCount)]
-		print(datetime.datetime.now().date() - firstDay)
-		print(dayCount)
 
 		self.piemonte = DataRegione(firstDay, dayCount, 1, "Piemonte")
 		self.valle_d_aosta = DataRegione(firstDay, dayCount, 2, "Valle d'Aosta")
@@ -168,7 +169,6 @@ class Data:
 				if regione.isCode(dataPoint["ISTAT"], dataPoint["area"]):
 					regione.addVaccino(dataPoint)
 		self.italia.finalize()
-		print(self.italia.tamponi)
 
 		jsonRegioni = requests.get(JSON_REGIONI_URL).json()
 		for dataPoint in jsonRegioni:
@@ -220,7 +220,7 @@ def plot(regione):
 	line1 = plotConMediaMobile(axis[1, 0], regione.percentuale_positivi, 7, "#aaaa00", "Percentuale positivi")
 	line2 = plotConMediaMobile(axis[1, 0], incremento(regione.percentuale_positivi, 7), 7, "#555500", "Percentuale positivi - incremento")
 	axisTamponi = axis[1, 0].twinx()
-	line3 = plotConMediaMobile(axisTamponi, incremento(regione.tamponi, 1), 7, "#aa00aa", "Tamponi", True)
+	line3 = plotConMediaMobile(axisTamponi, regione.nuovi_tamponi, 7, "#aa00aa", "Tamponi", True)
 
 	plotConMediaMobile(axis[1, 1], regione.nuovi_vaccini, 7, "#00ff00", "Nuovi vaccini", True)
 	plotConMediaMobile(axis[1, 1], regione.nuovi_vaccinati, 7, "#00ffff", "Nuovi vaccinati", True)
