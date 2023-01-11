@@ -244,6 +244,7 @@ def plot(regione):
 	plt.tight_layout()
 	plt.draw()
 
-d = Data()
-plot(d.italia)
-plt.show()
+if __name__ == "__main__":
+	d = Data()
+	plot(d.italia)
+	plt.show()
